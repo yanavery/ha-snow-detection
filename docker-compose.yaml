@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  ha-snow-detection:
+    container_name: ha-snow-detection
+    image: snow-detection-image:latest
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      TZ: America/Toronto
+      SNAPSHOT_URL: "http://<camera_url>/snapshot.jpg"
+      SNAPSHOT_URL_USERNAME: "<camera_username>"
+      SNAPSHOT_URL_PASSWORD: "<camera_password>"
+      POLYGON_POINTS: "[[438,324],[636,230],[650,250],[644,268],[468,390]]"
+      BRIGHTNESS_THRESHOLD: 100
+      SNOW_RATIO_THRESHOLD: 0.12
+      HA_URL: "http://<home_assistant_url>:8123"
+      HA_TOKEN: "<home_assistant_long_lived_access_token>"
+      HA_ENTITY_ID: "input_boolean.<your_entity_id>"

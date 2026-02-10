@@ -1,0 +1,5 @@
+.DS_Store
+node_modules
+snapshots
+setenv.sh
+snow-detection-image.tar
