@@ -30,7 +30,7 @@ const HA_TOKEN = process.env.HA_TOKEN;
 const HA_ENTITY_ID = process.env.HA_ENTITY_ID;
 
 // Frequency of snow check and HA refresh (in minutes)
-const CHECK_INTERVAL_MINUTES = 15;
+const CHECK_INTERVAL_MINUTES = process.env.CHECK_INTERVAL_MINUTES;
 
 /**
  * Build SVG polygon mask

@@ -19,6 +19,9 @@ export BRIGHTNESS_THRESHOLD="100"
 # value between 0-1, the minimum ratio of bright pixels to total pixels in the observed area to consider snow presence
 export SNOW_RATIO_THRESHOLD="0.12"
 
+# number of minutes to check for snow presence and update Home Assistant state
+export CHECK_INTERVAL_MINUTES=15
+
 # configuration for Home Assistant API
 export HA_URL="http://<ha ip address>:8123"
 export HA_TOKEN="<ha long lived access token>"
