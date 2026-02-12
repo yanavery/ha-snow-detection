@@ -82,10 +82,9 @@ async function createSnapshotFolder() {
 /**
  * Save image to disk using time stamped filename
  */
-async function saveImage(img, type) {
+async function saveImage(img, type, timestamp) {
   if (!SNAPSHOT_LOGGING_ENABLED) return;
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const imagePath = path.join(SNAPSHOT_DIR, `${type}-${timestamp}.jpg`);
 
   console.log(`Saving ${type} image to '${imagePath}'`);
@@ -217,17 +216,19 @@ async function updateHA(snowDetected) {
 async function checkSnow() {
   console.log("Snow detection begin");
 
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
   try {
     const imgSnaphot = await retrieveSnapshot();
-    await saveImage(imgSnaphot.clone(), 'snapshot');
+    await saveImage(imgSnaphot.clone(), 'snapshot', timestamp);
 
     const metadata = await imgSnaphot.metadata();
 
     const imgGrey = await createGreyscaleImage(imgSnaphot);
-    await saveImage(imgGrey.clone(), 'greyscale');
+    await saveImage(imgGrey.clone(), 'greyscale', timestamp);
 
     const imgMask = await createMaskImage(metadata.width, metadata.height);
-    await saveImage(imgMask.clone(), 'mask');
+    await saveImage(imgMask.clone(), 'mask', timestamp);
 
     const brightData = await calculateBrightnessData(
       imgGrey,
@@ -235,7 +236,7 @@ async function checkSnow() {
       metadata.width,
       metadata.height
     );
-    await saveImage(brightData.imgBright.clone(), "bright");
+    await saveImage(brightData.imgBright.clone(), "bright", timestamp);
 
     const ratio = brightData.totalWithinMask > 0 ? brightData.brightWithinMask / brightData.totalWithinMask : 0;
     const snowDetected = ratio >= SNOW_RATIO_THRESHOLD;
