@@ -85,7 +85,7 @@ async function createSnapshotFolder() {
 async function saveImage(img, type, timestamp) {
   if (!SNAPSHOT_LOGGING_ENABLED) return;
 
-  const imagePath = path.join(SNAPSHOT_DIR, `${type}-${timestamp}.jpg`);
+  const imagePath = path.join(SNAPSHOT_DIR, `${timestamp}-${type}.jpg`);
 
   console.log(`Saving ${type} image to '${imagePath}'`);
 
