@@ -4,6 +4,11 @@
 
 echo Setting environment variables for Docker container
 
+# app behavior configuration
+export SNAPSHOT_LOGGING_ENABLED="false"
+export DRY_RUN_SKIP_HA_UPDATE="false"
+export SNAPSHOT_DIR="./snapshots"
+
 # configuration for camera feed serving static image snapshots
 export SNAPSHOT_URL="http://<camera ip address>/cgi-bin/snapshot.cgi?channel=3"
 export SNAPSHOT_URL_USERNAME="<camera username>"

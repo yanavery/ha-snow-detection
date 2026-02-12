@@ -3,19 +3,19 @@ import path from "path";
 import fs from "fs/promises";
 import DigestClient from "digest-fetch";
 
-const VERSION = "0.0.4";
+const VERSION = "0.0.5";
 
 // Application configuration
-const SNAPSHOT_LOGGING_ENABLED = false;
-const DRY_RUN_SKIP_HA_UPDATE = false;
+const SNAPSHOT_LOGGING_ENABLED = process.env.SNAPSHOT_LOGGING_ENABLED === "true";
+const DRY_RUN_SKIP_HA_UPDATE = process.env.DRY_RUN_SKIP_HA_UPDATE === "true";
+
+// Local snapshot storage directory (for debugging and historical reference)
+const SNAPSHOT_DIR = process.env.SNAPSHOT_DIR;
 
 // Camera configuration
 const SNAPSHOT_URL = process.env.SNAPSHOT_URL;
 const SNAPSHOT_URL_USERNAME = process.env.SNAPSHOT_URL_USERNAME;
 const SNAPSHOT_URL_PASSWORD = process.env.SNAPSHOT_URL_PASSWORD;
-
-// Local snapshot storage directory (for debugging and historical reference)
-const SNAPSHOT_DIR = "./snapshots";
 
 // Polygon points to observe for snow presence (order matters, clockwise from top-left corner)
 const POLYGON_POINTS = JSON.parse(process.env.POLYGON_POINTS);

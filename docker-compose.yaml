@@ -9,6 +9,9 @@ services:
     environment:
       NODE_ENV: production
       TZ: America/Toronto
+      SNAPSHOT_LOGGING_ENABLED: "false"
+      DRY_RUN_SKIP_HA_UPDATE: "false"
+      SNAPSHOT_DIR: "./snapshots"
       SNAPSHOT_URL: "http://<camera_url>/snapshot.jpg"
       SNAPSHOT_URL_USERNAME: "<camera_username>"
       SNAPSHOT_URL_PASSWORD: "<camera_password>"
