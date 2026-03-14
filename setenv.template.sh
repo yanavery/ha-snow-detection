@@ -19,7 +19,8 @@ export SNAPSHOT_URL_PASSWORD="<camera password>"
 export POLYGON_POINTS="[[438,324],[636,230],[650,250],[644,268],[468,390]]"
 
 # value between 0-255, LOWER value increases odds of a pixel considered as snow (based on brightness)
-export BRIGHTNESS_THRESHOLD="100"
+export BRIGHTNESS_THRESHOLD="170"
+export BRIGHTNESS_THRESHOLD_IR="130"
 
 # value between 0-1, the minimum ratio of bright pixels to total pixels in the observed area to consider snow presence
 export SNOW_RATIO_THRESHOLD="0.12"

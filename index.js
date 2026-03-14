@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs/promises";
 import DigestClient from "digest-fetch";
 
-const VERSION = "0.0.5";
+const VERSION = "0.0.6";
 
 // Application configuration
 const SNAPSHOT_LOGGING_ENABLED = process.env.SNAPSHOT_LOGGING_ENABLED === "true";
@@ -21,7 +21,8 @@ const SNAPSHOT_URL_PASSWORD = process.env.SNAPSHOT_URL_PASSWORD;
 const POLYGON_POINTS = JSON.parse(process.env.POLYGON_POINTS);
 
 // Snow detection thresholds
-const BRIGHTNESS_THRESHOLD = Number(process.env.BRIGHTNESS_THRESHOLD); // 0-255
+const BRIGHTNESS_THRESHOLD = Number(process.env.BRIGHTNESS_THRESHOLD); // 0-255, used in color/daylight mode
+const BRIGHTNESS_THRESHOLD_IR = Number(process.env.BRIGHTNESS_THRESHOLD_IR); // 0-255, used when IR/night vision mode is detected
 const SNOW_RATIO_THRESHOLD = Number(process.env.SNOW_RATIO_THRESHOLD); // 0.12 = 12%
 
 // Home Assistant configuration
@@ -104,7 +105,39 @@ async function createMaskImage(width, height) {
     .grayscale();
 }
 
-async function calculateBrightnessData(imgGrey, imgMask, width, height) {
+/**
+ * Detect whether the camera is in IR/night-vision mode by checking if R≈G≈B
+ * across pixels. IR cameras output near-identical channel values.
+ */
+async function detectIRMode(imgSnapshot) {
+  const { data: colorBuffer, info } = await imgSnapshot.clone().raw().toBuffer({ resolveWithObject: true });
+
+  // Single-channel output means the camera itself is in grayscale/IR mode
+  if (info.channels < 3) {
+    console.log(`IR mode detection: single-channel image => isIR=true`);
+    return true;
+  }
+
+  // Count pixels with meaningful color. Check what fraction of pixels actually have channel
+  // differences above a per-pixel threshold — in a true IR image this is near 0%.
+  const pixelCount = info.width * info.height;
+  let coloredPixels = 0;
+
+  for (let i = 0; i < pixelCount; i++) {
+    const r = colorBuffer[i * info.channels];
+    const g = colorBuffer[i * info.channels + 1];
+    const b = colorBuffer[i * info.channels + 2];
+    const maxDiff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+    if (maxDiff > 20) coloredPixels++;
+  }
+
+  const colorRatio = coloredPixels / pixelCount;
+  const isIR = colorRatio < 0.02; // less than 2% of pixels have meaningful color
+  console.log(`IR mode detection: colorRatio=${(colorRatio * 100).toFixed(2)}% => isIR=${isIR}`);
+  return isIR;
+}
+
+async function calculateBrightnessData(imgGrey, imgMask, width, height, brightnessThreshold) {
   console.log("Calculating brightness data");
 
   const grayBuffer = await imgGrey.raw().toBuffer();
@@ -134,7 +167,7 @@ async function calculateBrightnessData(imgGrey, imgMask, width, height) {
     if (mask > 0) {
       total++;
 
-      if (gray >= BRIGHTNESS_THRESHOLD) {
+      if (gray >= brightnessThreshold) {
         bright++;
 
         // paint red
@@ -230,11 +263,16 @@ async function checkSnow() {
     const imgMask = await createMaskImage(metadata.width, metadata.height);
     await saveImage(imgMask.clone(), 'mask', timestamp);
 
+    const irMode = await detectIRMode(imgSnaphot);
+    const effectiveThreshold = irMode ? BRIGHTNESS_THRESHOLD_IR : BRIGHTNESS_THRESHOLD;
+    console.log(`Using ${irMode ? 'IR' : 'color'} mode brightness threshold: ${effectiveThreshold}`);
+
     const brightData = await calculateBrightnessData(
       imgGrey,
       imgMask,
       metadata.width,
-      metadata.height
+      metadata.height,
+      effectiveThreshold
     );
     await saveImage(brightData.imgBright.clone(), "bright", timestamp);
 
@@ -255,7 +293,7 @@ async function checkSnow() {
 async function main() {
   console.log(`Snow Detection v${VERSION} starting ...`);
   console.log(`Snow presence will be checked every ${CHECK_INTERVAL_MINUTES} minute(s)`);
-  console.log(`Brightness threshold: ${BRIGHTNESS_THRESHOLD}, Snow ratio threshold: ${SNOW_RATIO_THRESHOLD}`);
+  console.log(`Brightness threshold: ${BRIGHTNESS_THRESHOLD} (color) / ${BRIGHTNESS_THRESHOLD_IR} (IR), Snow ratio threshold: ${SNOW_RATIO_THRESHOLD}`);
   console.log(`Polygon points: ${JSON.stringify(POLYGON_POINTS)}`);
 
   await createSnapshotFolder();
